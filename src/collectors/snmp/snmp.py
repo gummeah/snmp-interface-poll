@@ -101,7 +101,6 @@ class SNMPCollector(diamond.collector.Collector):
         # TODO: Error check
 
         for o, v in varBind:
-            #ret[o.prettyPrint()] = v.prettyPrint()
             ret[str(o)] = str(v)
 
         return ret
