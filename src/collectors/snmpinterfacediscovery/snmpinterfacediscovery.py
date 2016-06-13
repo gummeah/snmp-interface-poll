@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """
-The SNMPInterfaceDiscovery is designed for collecting interface data from
+The SNMPInterfaceDiscoveryCollector is designed for collecting interface data from
 remote SNMP-enabled devices such as routers and switches using SNMP IF_MIB
 
 This collector does not collect anything. It simply discovers interfaces worth
@@ -14,7 +14,7 @@ installation collectors directory. This directory is defined
 in diamond.cfg under the *collectors_path* directive. This defaults to
 */usr/lib/diamond/collectors/* on Ubuntu.
 
-The SNMPInterfaceDiscovery.cfg file should be installed into your diamond
+The SNMPInterfaceDiscoveryCollector.cfg file should be installed into your diamond
 installation config directory. This directory is defined
 in diamond.cfg under the *collectors_config_path* directive. This defaults to
 */etc/diamond/* on Ubuntu.
@@ -30,7 +30,7 @@ under the *devices* header. Since this is just for interface discovery, you
 should run it infrequently, like every 4 hours.
 
 ```
-    # Options for SNMPInterfaceDiscovery
+    # Options for SNMPInterfaceDiscoveryCollector
     path = interface
     interval = 14400
 
@@ -47,7 +47,7 @@ should run it infrequently, like every 4 hours.
     community = public
 ```
 
-Note: If you modify the SNMPInterfaceDiscovery configuration, you will need to
+Note: If you modify the SNMPInterfaceDiscoveryCollector configuration, you will need to
 restart diamond, and wait for it to generate an oids.lst file.
 
 #### Dependencies
@@ -68,9 +68,9 @@ from diamond.metric import Metric
 import diamond.convertor
 
 
-class SNMPInterfaceDiscovery(parent_SNMPCollector):
+class SNMPInterfaceDiscoveryCollector(parent_SNMPCollector):
 
-    OIDFILE = '/etc/diamond/collectors/SNMPInterfacePoll.d/oids.lst'
+    OIDFILE = '/etc/diamond/collectors/SNMPInterfacePollCollector.d/oids.lst'
 
     OIDS = []
 
@@ -84,7 +84,6 @@ class SNMPInterfaceDiscovery(parent_SNMPCollector):
     VENDOR_DESC_OID = '1.3.6.1.2.1.1.1.0'
     IOS_XE_CPU_OID = '1.3.6.1.4.1.9.9.109.1.1.1.1.7.2'
     CISCO_LEGACY_CPU_OID = '1.3.6.1.4.1.9.9.109.1.1.1.1.7.1'
-    GENERIC_CPU_OID = '1.3.6.1.4.1.1588.2.1.1.1.26.1.0'
 
     # A list of IF-MIB the 32bit counters to walk
     IF_MIB_GAUGE_OID_TABLE = {
@@ -107,11 +106,11 @@ class SNMPInterfaceDiscovery(parent_SNMPCollector):
                                }
 
     # A list of interface types, and statuses we care about
-    IF_TYPES = ['6','135','131']
+    IF_TYPES = ['6', '53', '117', '135', '131']
     IF_STATUS = ['1']
 
     def get_default_config_help(self):
-        config_help = super(SNMPInterfaceDiscovery,
+        config_help = super(SNMPInterfaceDiscoveryCollector,
                             self).get_default_config_help()
         config_help.update({
         })
@@ -120,9 +119,9 @@ class SNMPInterfaceDiscovery(parent_SNMPCollector):
     def get_default_config(self):
         """
         Override SNMPCollector.get_default_config method to provide
-        default_config for the SNMPInterfaceDiscovery
+        default_config for the SNMPInterfaceDiscoveryCollector
         """
-        default_config = super(SNMPInterfaceDiscovery,
+        default_config = super(SNMPInterfaceDiscoveryCollector,
                                self).get_default_config()
         default_config['path'] = 'interface'
         default_config['byte_unit'] = ['bit', 'byte']
@@ -160,9 +159,9 @@ class SNMPInterfaceDiscovery(parent_SNMPCollector):
 
             if (ifTypeData[ifTypeOid] not in self.IF_TYPES or
                     ifStatusData[ifStatusOid] not in self.IF_STATUS):
-            # Skip Interface, not a status or type we care about.
+             #Skip Interface, not a status or type we care about.
                 continue
-            # Get Interface Name
+             #Get Interface Name
             ifNameOid = '.'.join([self.IF_MIB_NAME_OID, ifIndex])
             ifNameData = self.get(ifNameOid, host, port, community)
             ifName = ifNameData[ifNameOid]
@@ -256,18 +255,9 @@ class SNMPInterfaceDiscovery(parent_SNMPCollector):
                                                  metricPath
                                                  )
             self.OIDS.append(oidDesc)
-        # Some other device, let's try the generic CPU OID.
+
         else:
-            metricPath = '.'.join(['devices',
-                                  device,
-                                  'cpu',
-                                  'current_percent'])
-            oidDesc = 'G,{0},{1},{2},{3}'.format(host,
-                                                 community,
-                                                 self.GENERIC_CPU_OID,
-                                                 metricPath
-                                                 )
-            self.OIDS.append(oidDesc)          
+            pass
 
     def collect_snmp(self, device, host, port, community):
         """
